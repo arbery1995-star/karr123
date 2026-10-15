@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+{% macro err(name) %}{% if errors.get(name) %}<p class="error">{{ errors[name] }}</p>{% endif %}{% endmacro %}
+{% macro val(name, default="") %}{{ form.get(name, default) }}{% endmacro %}
+{% block content %}
+<section class="hero">
+  <h1>Renditeimmobilien mit Überschuss – <span class="accent">automatisch per Mail.</span></h1>
+  <p>Sag uns, was du suchst und wie viel monatlicher Überschuss übrig bleiben soll.
+     Wir durchsuchen ein- bis zweimal täglich die Immobilienportale in deiner Umgebung,
+     rechnen jedes Inserat durch und schicken dir nur die Objekte, die sich lohnen.</p>
+</section>
+
+{% if errors %}<div class="alert">Bitte prüfe die markierten Felder.</div>{% endif %}
+
+<form method="post" class="layout" id="alert-form" novalidate>
+  <div class="steps">
+
+    <fieldset class="card">
+      <legend><span class="step">1</span> Was für eine Immobilie?</legend>
+      <div class="type-grid">
+        {% for key, label in types.items() %}
+        <label class="type-option">
+          <input type="radio" name="property_type" value="{{ key }}"
+                 {% if form.get('property_type', 'wohnung') == key %}checked{% endif %}>
+          <span class="type-card">
+            <span class="type-icon" aria-hidden="true">{{ {'wohnung': '🏢', 'haus': '🏡', 'mehrfamilienhaus': '🏘️'}[key] }}</span>
+            <span>{{ label }}</span>
+          </span>
+        </label>
+        {% endfor %}
+      </div>
+      {{ err('property_type') }}
+      <div class="row">
+        <label class="field">Max. Kaufpreis <small>optional</small>
+          <span class="input-unit"><input type="number" name="max_price" min="10000" step="1000"
+                 placeholder="z. B. 250000" value="{{ val('max_price') }}"><span>€</span></span>
+          {{ err('max_price') }}
+        </label>
+        <label class="field">Min. Wohnfläche <small>optional</small>
+          <span class="input-unit"><input type="number" name="min_size" min="10" step="1"
+                 placeholder="z. B. 40" value="{{ val('min_size') }}"><span>m²</span></span>
+          {{ err('min_size') }}
+        </label>
+      </div>
+    </fieldset>
+
+    <fieldset class="card">
+      <legend><span class="step">2</span> Wo?</legend>
+      <label class="field">PLZ oder Ort
+        <input type="text" name="location" required placeholder="z. B. 44135 oder Dortmund"
+               value="{{ val('location') }}" autocomplete="postal-code">
+        {{ err('location') }}
+      </label>
+      <label class="field">Umkreis: <output id="radius-out">{{ val('radius_km', 20)|int }} km</output>
+        <input type="range" id="radius-slider" min="0" max="7" step="1" aria-label="Umkreis">
+        <input type="hidden" name="radius_km" id="radius" value="{{ val('radius_km', 20)|int }}">
+        <span class="scale"><span>5 km</span><span>200 km</span></span>
+        {{ err('radius_km') }}
+      </label>
+    </fieldset>
+
+    <fieldset class="card">
+      <legend><span class="step">3</span> Wie viel Überschuss?</legend>
+      <label class="field">Mindestens monatlicher Überschuss (Cashflow nach Kreditrate &amp; Kosten)
+        <span class="input-unit big"><input type="number" name="min_cashflow" id="min_cashflow"
+               step="10" value="{{ val('min_cashflow', 100) }}" required><span>€ / Monat</span></span>
+        {{ err('min_cashflow') }}
+      </label>
+
+      <details class="assumptions" {% if errors %}open{% endif %}>
+        <summary>Finanzierung &amp; Annahmen anpassen</summary>
+        <p class="hint">Damit rechnen wir den Überschuss für jedes Inserat. Ist im Inserat eine
+          Ist-Miete angegeben (z. B. „vermietet, Kaltmiete 650 €“), nehmen wir diese.</p>
+        <div class="grid-3">
+          {% for name, label, unit, step, default in [
+            ('equity', 'Eigenkapital', '€', 1000, 30000),
+            ('interest_pct', 'Sollzins', '% p.a.', 0.1, 3.8),
+            ('repayment_pct', 'Tilgung', '% p.a.', 0.1, 2.0),
+            ('closing_pct', 'Kaufnebenkosten', '%', 0.5, 10),
+            ('rent_per_sqm', 'Erwartete Kaltmiete', '€/m²', 0.5, 11),
+            ('costs_pct', 'Nicht umlagef. Kosten', '% der Miete', 1, 15),
+          ] %}
+          <label class="field">{{ label }}
+            <span class="input-unit"><input type="number" name="{{ name }}" id="{{ name }}"
+                   step="{{ step }}" value="{{ val(name, default) }}"><span>{{ unit }}</span></span>
+            {{ err(name) }}
+          </label>
+          {% endfor %}
+        </div>
+      </details>
+    </fieldset>
+
+    <fieldset class="card">
+      <legend><span class="step">4</span> Wohin sollen die Treffer?</legend>
+      <label class="field">E-Mail-Adresse
+        <input type="email" name="email" required placeholder="du@beispiel.de" value="{{ val('email') }}"
+               autocomplete="email">
+        {{ err('email') }}
+      </label>
+      <div class="segmented" role="radiogroup" aria-label="Häufigkeit">
+        <label><input type="radio" name="frequency" value="1" {% if form.get('frequency', '1') == '1' %}checked{% endif %}>
+          <span>1× täglich <small>morgens</small></span></label>
+        <label><input type="radio" name="frequency" value="2" {% if form.get('frequency') == '2' %}checked{% endif %}>
+          <span>2× täglich <small>morgens &amp; abends</small></span></label>
+      </div>
+      <label class="check">
+        <input type="checkbox" name="consent" value="1" {% if form.get('consent') %}checked{% endif %}>
+        <span>Ich bin einverstanden, dass meine E-Mail-Adresse und Suchkriterien gespeichert werden,
+          um mir passende Inserate zu schicken. Abmeldung jederzeit per Link in jeder Mail.</span>
+      </label>
+      {{ err('consent') }}
+      <button class="btn primary" type="submit">Suchauftrag starten</button>
+    </fieldset>
+  </div>
+
+  <aside class="card calc" aria-live="polite">
+    <h2>Beispielrechnung</h2>
+    <p class="hint">So bewerten wir ein Inserat mit deinen Annahmen:</p>
+    <div class="row">
+      <label class="field">Kaufpreis
+        <span class="input-unit"><input type="number" id="ex_price" value="180000" step="5000"><span>€</span></span>
+      </label>
+      <label class="field">Fläche
+        <span class="input-unit"><input type="number" id="ex_size" value="65" step="1"><span>m²</span></span>
+      </label>
+    </div>
+    <dl class="breakdown">
+      <div><dt>Kaltmiete</dt><dd id="o_rent">–</dd></div>
+      <div><dt>Kreditrate</dt><dd id="o_rate">–</dd></div>
+      <div><dt>Nicht umlagef. Kosten</dt><dd id="o_costs">–</dd></div>
+      <div class="total"><dt>Überschuss</dt><dd id="o_cf">–</dd></div>
+    </dl>
+    <p class="verdict" id="o_verdict"></p>
+    <p class="hint small">Darlehen = Kaufpreis + Nebenkosten − Eigenkapital (<span id="o_loan">–</span>).
+      Bruttomietrendite: <span id="o_yield">–</span>.</p>
+  </aside>
+</form>
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='app.js') }}"></script>{% endblock %}

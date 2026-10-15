@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}{{ title }} – ImmoAlert{% endblock %}
+{% block content %}
+<section class="card message">
+  <h1>{{ title }}</h1>
+  <p>{{ text }}</p>
+  <a class="btn" href="{{ url_for('index') }}">Weiteren Suchauftrag anlegen</a>
+</section>
+{% endblock %}

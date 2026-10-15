@@ -1,2 +1,5 @@
 scrapegraphai
 requests
+flask
+beautifulsoup4
+pytest

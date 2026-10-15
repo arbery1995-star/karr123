@@ -1,0 +1,27 @@
+<div style="font-family:system-ui,Arial,sans-serif;max-width:640px;margin:auto;color:#1d2321">
+  <h2 style="margin-bottom:4px">{{ hits|length }} neue Treffer für dich</h2>
+  <p style="color:#5d6662;margin-top:0">{{ sub.property_type|capitalize }} · {{ sub.location }} +{{ sub.radius_km }} km ·
+     Überschuss ≥ {{ sub.min_cashflow|eur }}/Monat</p>
+  {% for l, c in hits %}
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e2e0d8;border-radius:10px;margin:14px 0">
+    <tr>
+      {% if l.image %}<td width="130" style="padding:12px"><img src="{{ l.image }}" width="120" style="border-radius:6px;display:block" alt=""></td>{% endif %}
+      <td style="padding:12px">
+        <a href="{{ l.url }}" style="color:#0f7a5c;font-weight:650;font-size:16px;text-decoration:none">{{ l.title }}</a>
+        <div style="color:#5d6662;font-size:13px">{{ l.location }} · {{ l.source }}</div>
+        <div style="margin-top:6px;font-size:14px">
+          {{ l.price|eur }}{% if l.size_sqm %} · {{ l.size_sqm|round(0)|int }} m²{% endif %}{% if l.rooms %} · {{ l.rooms }} Zi.{% endif %}
+        </div>
+        <div style="margin-top:6px;font-size:14px">
+          <b style="color:#0f7a5c;font-size:16px">+{{ c.cashflow|eur }}/Monat</b>
+          <span style="color:#5d6662">· Miete {{ c.rent|eur }} {% if c.rent_estimated %}(geschätzt){% else %}(laut Inserat){% endif %}
+          · Rate {{ c.loan_payment|eur }} · Rendite {{ c.gross_yield_pct }} %</span>
+        </div>
+      </td>
+    </tr>
+  </table>
+  {% endfor %}
+  <p style="color:#5d6662;font-size:12px">Überschuss = Kaltmiete − Kreditrate (Zins + Tilgung) − nicht umlagefähige Kosten, vor Steuern.
+     Geschätzte Mieten basieren auf deinem €/m²-Wert. Alle Angaben ohne Gewähr.<br>
+     <a href="{{ unsubscribe_url }}" style="color:#5d6662">Suchauftrag abbestellen</a></p>
+</div>

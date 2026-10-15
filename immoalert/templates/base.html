@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}ImmoAlert{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="{{ url_for('index') }}"><span class="brand-mark">◆</span> ImmoAlert</a>
+  </header>
+  <main>{% block content %}{% endblock %}</main>
+  <footer class="footer">
+    Angaben ohne Gewähr. Der Überschuss ist eine vereinfachte Rechnung vor Steuern und ersetzt keine Beratung.
+  </footer>
+  {% block scripts %}{% endblock %}
+</body>
+</html>
